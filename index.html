@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resistor Color Code Calculator</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #ffffff;
+            --primary-color: #bb86fc;
+            --secondary-color: #03dac6;
+            --error-color: #cf6679;
+            --button-color: #ff4081;
+            --button-hover: #ff80ab;
+            --input-bg: #2d2d2d;
+            --border-color: #333333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        h1, h2, h3 {
+            color: var(--text-color);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .tab-button {
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab-button.active {
+            border-bottom: 3px solid var(--primary-color);
+            background-color: var(--card-bg);
+        }
+
+        .tab-button:hover:not(.active) {
+            background-color: #3d3d3d;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .band-selector {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .band-button {
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .band-button.active {
+            background-color: var(--primary-color);
+            color: #000;
+        }
+
+        .form-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .input-section {
+            padding: 20px;
+        }
+
+        .output-section {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .color-selector {
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .color-selector label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .custom-select {
+            position: relative;
+            width: 100%;
+        }
+
+        .select-selected {
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            padding: 10px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .select-selected:after {
+            content: "";
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 6px solid var(--text-color);
+        }
+
+        .color-preview {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 1px solid #666;
+        }
+
+        .select-items {
+            display: none;
+            position: absolute;
+            background-color: var(--input-bg);
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 99;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+        }
+        .select-items.show {
+            display: block;
+        }
+
+        .select-items div {
+            padding: 10px 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .select-items div:hover {
+            background-color: #3d3d3d;
+        }
+
+        .select-hide {
+            display: none;
+        }
+
+        .resistor-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .resistor {
+            width: 300px;
+            height: 100px;
+            position: relative;
+            margin: 20px 0;
+        }
+
+        .resistor-body {
+            position: absolute;
+            width: 200px;
+            height: 60px;
+            background-color: #f5f2e3;
+            top: 20px;
+            left: 50px;
+            border-radius: 10px;
+        }
+
+        .resistor-lead-left {
+            position: absolute;
+            width: 50px;
+            height: 8px;
+            background-color: #c0c0c0;
+            top: 46px;
+            left: 0;
+        }
+
+        .resistor-lead-right {
+            position: absolute;
+            width: 50px;
+            height: 8px;
+            background-color: #c0c0c0;
+            top: 46px;
+            right: 0;
+        }
+
+        .band {
+            position: absolute;
+            width: 12px;
+            height: 60px;
+            top: 20px;
+        }
+
+        .band-1 {
+            left: 65px;
+        }
+
+        .band-2 {
+            left: 95px;
+        }
+
+        .band-3 {
+            left: 125px;
+        }
+
+        .band-4 {
+            left: 155px;
+        }
+
+        .band-5 {
+            left: 185px;
+        }
+
+        .band-6 {
+            left: 215px;
+        }
+
+        .result {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 1.5em;
+            padding: 15px;
+            background-color: var(--input-bg);
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: var(--button-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: var(--button-hover);
+        }
+
+        .clear-btn {
+            background-color: var(--error-color);
+        }
+
+        .clear-btn:hover {
+            background-color: #e57373;
+        }
+
+        .instruction-container {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: var(--input-bg);
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .instruction-container h3 {
+            text-align: left;
+            margin-top: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        table, th, td {
+            border: 1px solid var(--border-color);
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #2a2a2a;
+        }
+        .instructions {
+            background-color: rgba(3, 218, 198, 0.1);
+            padding: 20px;
+            border-left: 4px solid var(--secondary-color);
+            margin-bottom: 30px;
+            border-radius: 0 8px 8px 0;
+        }
+        .footer {
+            margin-top: auto;
+            padding: 20px 0;
+            color: #666;
+            text-align: center;
+            font-size: 0.8rem;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .form-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .resistor {
+                width: 250px;
+            }
+            
+            .resistor-body {
+                width: 170px;
+                left: 40px;
+            }
+            
+            .resistor-lead-left {
+                width: 40px;
+            }
+            
+            .resistor-lead-right {
+                width: 40px;
+            }
+            
+            .band {
+                width: 10px;
+            }
+            
+            .band-1 { left: 55px; }
+            .band-2 { left: 80px; }
+            .band-3 { left: 105px; }
+            .band-4 { left: 130px; }
+            .band-5 { left: 155px; }
+            .band-6 { left: 180px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Resistor Color Code Calculator</h1>
+        
+        <div class="tabs">
+            <button class="tab-button active" onclick="openTab(event, 'calculator')">Calculator</button>
+            <button class="tab-button" onclick="openTab(event, 'instructions')">Instructions & Diagram</button>
+        </div>
+        <div class="instructions">
+            <h3>Instructions</h3>
+            <p>1. Select the number of bands on your resistor (4, 5, or 6).</p>
+            <p>2. Choose the color for each band from the dropdown menus.</p>
+            <p>3. The color preview will appear next to each dropdown.</p>
+            <p>4. Click "Calculate" to see the resistor value and visual representation.</p>
+        </div>
+        
+        <div id="calculator" class="tab-content active">
+            <div class="band-selector">
+                <h3>Number of Bands</h3>
+                <button class="band-button active" onclick="setBandNumber(4)">4 Band</button>
+                <button class="band-button" onclick="setBandNumber(5)">5 Band</button>
+                <button class="band-button" onclick="setBandNumber(6)">6 Band</button>
+            </div>
+            
+            <div class="form-container">
+                <div class="input-section">
+                    <h3>Resistor Parameters</h3>
+                    
+                    <div class="color-selector" id="band1-container">
+                        <label for="band1">1st Band of Color</label>
+                        <div class="custom-select">
+                            <div class="select-selected" onclick="toggleDropdown(this)">
+                                <span class="color-preview"></span>
+                                <span>Select a Color</span>
+                            </div>
+                            <div class="select-items select-hide" id="band1-items">
+                                <!-- Items will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="color-selector" id="band2-container">
+                        <label for="band2">2nd Band of Color</label>
+                        <div class="custom-select">
+                            <div class="select-selected" onclick="toggleDropdown(this)">
+                                <span class="color-preview"></span>
+                                <span>Select a Color</span>
+                            </div>
+                            <div class="select-items select-hide" id="band2-items">
+                                <!-- Items will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="color-selector" id="band3-container">
+                        <label for="band3">3rd Band of Color</label>
+                        <div class="custom-select">
+                            <div class="select-selected" onclick="toggleDropdown(this)">
+                                <span class="color-preview"></span>
+                                <span>Select a Color</span>
+                            </div>
+                            <div class="select-items select-hide" id="band3-items">
+                                <!-- Items will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="color-selector" id="band4-container">
+                        <label for="band4">Multiplier</label>
+                        <div class="custom-select">
+                            <div class="select-selected" onclick="toggleDropdown(this)">
+                                <span class="color-preview"></span>
+                                <span>Select a Color</span>
+                            </div>
+                            <div class="select-items select-hide" id="band4-items">
+                                <!-- Items will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="color-selector" id="band5-container">
+                        <label for="band5">Tolerance</label>
+                        <div class="custom-select">
+                            <div class="select-selected" onclick="toggleDropdown(this)">
+                                <span class="color-preview"></span>
+                                <span>Select a Color</span>
+                            </div>
+                            <div class="select-items select-hide" id="band5-items">
+                                <!-- Items will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="color-selector" id="band6-container">
+                        <label for="band6">Temperature Coefficient</label>
+                        <div class="custom-select">
+                            <div class="select-selected" onclick="toggleDropdown(this)">
+                                <span class="color-preview"></span>
+                                <span>Select a Color</span>
+                            </div>
+                            <div class="select-items select-hide" id="band6-items">
+                                <!-- Items will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="button-container">
+                        <button onclick="calculateResistance()">Calculate</button>
+                        <button class="clear-btn" onclick="clearSelections()">Clear Selection</button>
+                    </div>
+                </div>
+                
+                <div class="output-section">
+                    <h2>Output</h2>
+                    <div class="resistor-container">
+                        <div class="resistor">
+                            <div class="resistor-lead-left"></div>
+                            <div class="resistor-body"></div>
+                            <div class="resistor-lead-right"></div>
+                            <div class="band band-1" id="resistor-band-1"></div>
+                            <div class="band band-2" id="resistor-band-2"></div>
+                            <div class="band band-3" id="resistor-band-3"></div>
+                            <div class="band band-4" id="resistor-band-4"></div>
+                            <div class="band band-5" id="resistor-band-5"></div>
+                            <div class="band band-6" id="resistor-band-6"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="result">
+                        <h3>Resistor value:</h3>
+                        <div id="resistance-value">Select colors to calculate</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="instructions" class="tab-content">
+            <div class="instruction-container">
+                <h3>How to Use the Resistor Calculator</h3>
+                <p>1. Select the number of bands on your resistor (4, 5, or 6).</p>
+                <p>2. Choose the appropriate color for each band.</p>
+                <p>3. Click "Calculate" to determine the resistor value.</p>
+                
+                <h3>Color Code Reference</h3>
+                <table>
+                    <tr>
+                        <th>Color</th>
+                        <th>1st Band</th>
+                        <th>2nd Band</th>
+                        <th>3rd Band</th>
+                        <th>Multiplier</th>
+                        <th>Tolerance</th>
+                        <th>Temp. Coef.</th>
+                    </tr>
+                    <tr>
+                        <td>Black</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>×1 Ω</td>
+                        <td>-</td>
+                        <td>250 ppm/°C</td>
+                    </tr>
+                    <tr>
+                        <td>Brown</td>
+                        <td>1</td>
+                        <td>1</td>
+                        <td>1</td>
+                        <td>×10 Ω</td>
+                        <td>±1%</td>
+                        <td>100 ppm/°C</td>
+                    </tr>
+                    <tr>
+                        <td>Red</td>
+                        <td>2</td>
+                        <td>2</td>
+                        <td>2</td>
+                        <td>×100 Ω</td>
+                        <td>±2%</td>
+                        <td>50 ppm/°C</td>
+                    </tr>
+                    <tr>
+                        <td>Orange</td>
+                        <td>3</td>
+                        <td>3</td>
+                        <td>3</td>
+                        <td>×1 kΩ</td>
+                        <td>±0.05%</td>
+                        <td>15 ppm/°C</td>
+                    </tr>
+                    <tr>
+                        <td>Yellow</td>
+                        <td>4</td>
+                        <td>4</td>
+                        <td>4</td>
+                        <td>×10 kΩ</td>
+                        <td>±0.02%</td>
+                        <td>25 ppm/°C</td>
+                    </tr>
+                    <tr>
+                        <td>Green</td>
+                        <td>5</td>
+                        <td>5</td>
+                        <td>5</td>
+                        <td>×100 kΩ</td>
+                        <td>±0.5%</td>
+                        <td>20 ppm/°C</td>
+                    </tr>
+                    <tr>
+                        <td>Blue</td>
+                        <td>6</td>
+                        <td>6</td>
+                        <td>6</td>
+                        <td>×1 MΩ</td>
+                        <td>±0.25%</td>
+                        <td>10 ppm/°C</td>
+                    </tr>
+                    <tr>
+                        <td>Violet</td>
+                        <td>7</td>
+                        <td>7</td>
+                        <td>7</td>
+                        <td>×10 MΩ</td>
+                        <td>±0.1%</td>
+                        <td>5 ppm/°C</td>
+                    </tr>
+                    <tr>
+                        <td>Grey</td>
+                        <td>8</td>
+                        <td>8</td>
+                        <td>8</td>
+                        <td>×100 MΩ</td>
+                        <td>±0.01%</td>
+                        <td>1 ppm/°C</td>
+                    </tr>
+                    <tr>
+                        <td>White</td>
+                        <td>9</td>
+                        <td>9</td>
+                        <td>9</td>
+                        <td>×1 GΩ</td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>Gold</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>×0.1 Ω</td>
+                        <td>±5%</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>Silver</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>×0.01 Ω</td>
+                        <td>±10%</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>None</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>±20%</td>
+                        <td>-</td>
+                    </tr>
+                </table>
+                
+                <h3>Resistor Band Configuration</h3>
+                <p><strong>4-Band Resistor:</strong> 1st digit, 2nd digit, multiplier, tolerance</p>
+                <p><strong>5-Band Resistor:</strong> 1st digit, 2nd digit, 3rd digit, multiplier, tolerance</p>
+                <p><strong>6-Band Resistor:</strong> 1st digit, 2nd digit, 3rd digit, multiplier, tolerance, temperature coefficient</p>
+            </div>
+        </div>
+    </div>
+    <div class="footer">
+        Design by : JGS Lanka Co.™ JANITH GRAPHIC STUDIO | © 2025 | Sri Lanka
+    </div>
+
+    <script>
+        // Color codes and values
+const colorCodes = {
+    black: { color: '#000000', value: 0, multiplier: 1, tempCoef: 250 },
+    brown: { color: '#8B4513', value: 1, multiplier: 10, tolerance: 1, tempCoef: 100 },
+    red: { color: '#FF0000', value: 2, multiplier: 100, tolerance: 2, tempCoef: 50 },
+    orange: { color: '#FFA500', value: 3, multiplier: 1000, tolerance: 0.05, tempCoef: 15 },
+    yellow: { color: '#FFFF00', value: 4, multiplier: 10000, tolerance: 0.02, tempCoef: 25 },
+    green: { color: '#008000', value: 5, multiplier: 100000, tolerance: 0.5, tempCoef: 20 },
+    blue: { color: '#0000FF', value: 6, multiplier: 1000000, tolerance: 0.25, tempCoef: 10 },
+    violet: { color: '#8A2BE2', value: 7, multiplier: 10000000, tolerance: 0.1, tempCoef: 5 },
+    grey: { color: '#808080', value: 8, multiplier: 100000000, tolerance: 0.01, tempCoef: 1 },
+    white: { color: '#FFFFFF', value: 9, multiplier: 1000000000 },
+    gold: { color: '#FFD700', multiplier: 0.1, tolerance: 5 },
+    silver: { color: '#C0C0C0', multiplier: 0.01, tolerance: 10 },
+    none: { color: 'transparent', tolerance: 20 }
+};
+
+// Valid colors for each band
+const validColors = {
+    digit: ['black', 'brown', 'red', 'orange', 'yellow', 'green', 'blue', 'violet', 'grey', 'white'],
+    multiplier: ['black', 'brown', 'red', 'orange', 'yellow', 'green', 'blue', 'violet', 'grey', 'white', 'gold', 'silver'],
+    tolerance: ['brown', 'red', 'orange', 'yellow', 'green', 'blue', 'violet', 'grey', 'gold', 'silver', 'none'],
+    tempCoef: ['black', 'brown', 'red', 'orange', 'yellow', 'green', 'blue', 'violet', 'grey']
+};
+
+// Current state
+let currentBands = 4;
+let selectedColors = {
+    band1: null,
+    band2: null,
+    band3: null,
+    band4: null,
+    band5: null,
+    band6: null
+};
+
+// Initialize the app
+window.onload = function() {
+    initializeColorDropdowns();
+    setBandNumber(4); // Start with 4-band resistor
+};
+
+// Initialize color dropdowns
+function initializeColorDropdowns() {
+    // First band (digit)
+    populateDropdown('band1-items', validColors.digit, 'band1');
+    
+    // Second band (digit)
+    populateDropdown('band2-items', validColors.digit, 'band2');
+    
+    // Third band (digit - only for 5 and 6 band resistors)
+    populateDropdown('band3-items', validColors.digit, 'band3');
+    
+    // Fourth band (multiplier)
+    populateDropdown('band4-items', validColors.multiplier, 'band4');
+    
+    // Fifth band (tolerance)
+    populateDropdown('band5-items', validColors.tolerance, 'band5');
+    
+    // Sixth band (temperature coefficient - only for 6 band resistors)
+    populateDropdown('band6-items', validColors.tempCoef, 'band6');
+}
+
+// Populate dropdown with color options
+function populateDropdown(dropdownId, colors, bandId) {
+    const dropdown = document.getElementById(dropdownId);
+    dropdown.innerHTML = '';
+    
+    colors.forEach(color => {
+        const item = document.createElement('div');
+        const preview = document.createElement('span');
+        preview.className = 'color-preview';
+        preview.style.backgroundColor = colorCodes[color].color;
+        
+        const text = document.createElement('span');
+        // Capitalize first letter of color name
+        text.textContent = color.charAt(0).toUpperCase() + color.slice(1);
+        
+        item.appendChild(preview);
+        item.appendChild(text);
+        
+        item.addEventListener('click', function() {
+            selectColor(bandId, color, this.parentElement.parentElement.querySelector('.select-selected'));
+            closeAllDropdowns();
+        });
+        
+        dropdown.appendChild(item);
+    });
+}
+
+  // Toggle dropdown visibility
+  function toggleDropdown(element) {
+            closeAllDropdowns();
+            const dropdown = element.parentElement.querySelector('.select-items');
+            dropdown.classList.toggle('show');
+        }
+
+        // Close all dropdowns
+        function closeAllDropdowns() {
+            const items = document.querySelectorAll('.select-items');
+            items.forEach(item => {
+                item.classList.remove('show');
+            });
+        }
+
+// Select a color for a band
+function selectColor(bandId, color, selectedElement) {
+    selectedColors[bandId] = color;
+    
+    // Update the selected item display
+    const preview = selectedElement.querySelector('.color-preview');
+    preview.style.backgroundColor = colorCodes[color].color;
+    
+    const text = selectedElement.querySelector('span:not(.color-preview)');
+    text.textContent = color.charAt(0).toUpperCase() + color.slice(1);
+    
+    // Update resistor visualization
+    updateResistorVisualization();
+}
+
+// Set the number of bands
+function setBandNumber(bands) {
+    currentBands = bands;
+    
+    // Update band buttons
+    const buttons = document.getElementsByClassName('band-button');
+    for (let i = 0; i < buttons.length; i++) {
+        buttons[i].classList.remove('active');
+    }
+    buttons[bands - 4].classList.add('active');
+    
+    // Show/hide appropriate band inputs
+    document.getElementById('band3-container').style.display = (bands >= 5) ? 'block' : 'none';
+    document.getElementById('band6-container').style.display = (bands === 6) ? 'block' : 'none';
+    
+    // Update labels based on band number
+    if (bands === 4) {
+        document.getElementById('band4-container').querySelector('label').textContent = 'Multiplier';
+        document.getElementById('band5-container').querySelector('label').textContent = 'Tolerance';
+    } else if (bands === 5) {
+        document.getElementById('band4-container').querySelector('label').textContent = 'Multiplier';
+        document.getElementById('band5-container').querySelector('label').textContent = 'Tolerance';
+    } else if (bands === 6) {
+        document.getElementById('band5-container').querySelector('label').textContent = 'Tolerance';
+        document.getElementById('band6-container').querySelector('label').textContent = 'Temperature Coefficient';
+    }
+    
+    // Update resistor visualization
+    updateResistorVisualization();
+}
+
+// Update resistor visualization
+function updateResistorVisualization() {
+    // Show/hide bands based on current band number
+    document.getElementById('resistor-band-3').style.display = (currentBands >= 5) ? 'block' : 'none';
+    document.getElementById('resistor-band-6').style.display = (currentBands === 6) ? 'block' : 'none';
+    
+    // Update band colors
+    for (let i = 1; i <= 6; i++) {
+        const bandElement = document.getElementById(`resistor-band-${i}`);
+        const color = selectedColors[`band${i}`];
+        
+        if (bandElement) {
+            if (color) {
+                bandElement.style.backgroundColor = colorCodes[color].color;
+                bandElement.style.display = 'block';
+            } else {
+                bandElement.style.backgroundColor = 'transparent';
+                bandElement.style.display = (i === 3 && currentBands >= 5) || (i === 6 && currentBands === 6) ? 'block' : 'none';
+            }
+        }
+    }
+}
+
+// Calculate resistance value
+function calculateResistance() {
+    // Check if required colors are selected
+    if (currentBands === 4 && (!selectedColors.band1 || !selectedColors.band2 || !selectedColors.band4 || !selectedColors.band5)) {
+        alert('Please select colors for all required bands');
+        return;
+    }
+    
+    if (currentBands === 5 && (!selectedColors.band1 || !selectedColors.band2 || !selectedColors.band3 || !selectedColors.band4 || !selectedColors.band5)) {
+        alert('Please select colors for all required bands');
+        return;
+    }
+    
+    if (currentBands === 6 && (!selectedColors.band1 || !selectedColors.band2 || !selectedColors.band3 || !selectedColors.band4 || !selectedColors.band5 || !selectedColors.band6)) {
+        alert('Please select colors for all required bands');
+        return;
+    }
+    
+    // Calculate resistance value
+    let digits = '';
+    let resistance = 0;
+    let tolerance = '';
+    let tempCoef = '';
+    
+    if (currentBands === 4) {
+        digits = colorCodes[selectedColors.band1].value.toString() + 
+                 colorCodes[selectedColors.band2].value.toString();
+        resistance = parseInt(digits) * colorCodes[selectedColors.band4].multiplier;
+        tolerance = colorCodes[selectedColors.band5].tolerance;
+    } else if (currentBands === 5) {
+        digits = colorCodes[selectedColors.band1].value.toString() + 
+                 colorCodes[selectedColors.band2].value.toString() + 
+                 colorCodes[selectedColors.band3].value.toString();
+        resistance = parseInt(digits) * colorCodes[selectedColors.band4].multiplier;
+        tolerance = colorCodes[selectedColors.band5].tolerance;
+    } else if (currentBands === 6) {
+        digits = colorCodes[selectedColors.band1].value.toString() + 
+                 colorCodes[selectedColors.band2].value.toString() + 
+                 colorCodes[selectedColors.band3].value.toString();
+        resistance = parseInt(digits) * colorCodes[selectedColors.band4].multiplier;
+        tolerance = colorCodes[selectedColors.band5].tolerance;
+        tempCoef = colorCodes[selectedColors.band6].tempCoef;
+    }
+    
+    // Format the resistance value
+    let formattedResistance = '';
+    if (resistance >= 1000000000) {
+        formattedResistance = (resistance / 1000000000).toFixed(2) + ' GΩ';
+    } else if (resistance >= 1000000) {
+        formattedResistance = (resistance / 1000000).toFixed(2) + ' MΩ';
+    } else if (resistance >= 1000) {
+        formattedResistance = (resistance / 1000).toFixed(2) + ' kΩ';
+    } else {
+        formattedResistance = resistance.toFixed(2) + ' Ω';
+    }
+    
+    // Build the result string
+    let resultString = formattedResistance + ' ±' + tolerance + '%';
+    
+    if (currentBands === 6) {
+        resultString += ' (' + tempCoef + ' ppm/°C)';
+    }
+    
+    // Display the result
+    document.getElementById('resistance-value').innerHTML = resultString;
+}
+
+// Clear all selections
+function clearSelections() {
+    // Reset selected colors
+    selectedColors = {
+        band1: null,
+        band2: null,
+        band3: null,
+        band4: null,
+        band5: null,
+        band6: null
+    };
+    
+    // Reset dropdown displays
+    const selects = document.querySelectorAll('.select-selected');
+    selects.forEach(select => {
+        const preview = select.querySelector('.color-preview');
+        preview.style.backgroundColor = '';
+        
+        const text = select.querySelector('span:not(.color-preview)');
+        text.textContent = 'Select a Color';
+    });
+    
+    // Reset resistor visualization
+    updateResistorVisualization();
+    
+    // Reset result display
+    document.getElementById('resistance-value').textContent = 'Select colors to calculate';
+}
+
+// Switch between tabs
+function openTab(event, tabName) {
+    const tabContents = document.getElementsByClassName('tab-content');
+    for (let i = 0; i < tabContents.length; i++) {
+        tabContents[i].classList.remove('active');
+    }
+    
+    const tabButtons = document.getElementsByClassName('tab-button');
+    for (let i = 0; i < tabButtons.length; i++) {
+        tabButtons[i].classList.remove('active');
+    }
+    
+    document.getElementById(tabName).classList.add('active');
+    event.currentTarget.classList.add('active');
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(event) {
+    if (!event.target.matches('.select-selected') && !event.target.matches('.select-selected *')) {
+        closeAllDropdowns();
+    }
+});
+</script>
+</body>
+</html>
